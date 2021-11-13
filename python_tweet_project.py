@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from pandas.core.frame import DataFrame
 import tweepy as tw
 import datetime 
 import csv
@@ -22,10 +23,10 @@ except:
     print("Error during authentication")
 
 # Define the search terms
-search_words = "#lokdauns"
+search_words = "#Latvija"
 language = "lv"
 date_until = datetime.date.today()
-item_count = 15
+item_count = 50
 
 # Collect tweets
 tweets = tw.Cursor(api.search_tweets,
@@ -33,7 +34,7 @@ tweets = tw.Cursor(api.search_tweets,
               lang = language,
               until = date_until).items(item_count)
                   
-# Open/create a file to append data to
+# Open a file to append data to
 file_path = '/Users/ivetanagle/PythonFiles/Python_tweet_project/result.csv'
 csvFile = open(file_path, 'w')
 
@@ -43,33 +44,28 @@ csvWriter = csv.writer(csvFile)
 # Iterate, write a row to the CSV file, print tweets
 my_list_of_tweets = []
 for tweet in tweets:
-    csvWriter.writerow([tweet.created_at, tweet.user.name, tweet.user.location, tweet.text])
-    print (tweet.created_at)
-    print (tweet.user.name)
-    print (tweet.user.location)
-    print (tweet.text + '\n')
+    csvWriter.writerow([tweet.created_at, tweet.text, tweet.entities['hashtags'],tweet.user.location, tweet.user.name, 
+                        tweet.user.followers_count, tweet.user.statuses_count])
     my_list_of_tweets.append(tweet)
 csvFile.close()
 
 # Create a pandas dataframe
-header_list = ["Created at", "Username", "Location", "Text"]
+header_list = ["Created at", "Text", "Hashtags", "Location","Username", "Followers", "Totaltweets"]
 my_df = pd.read_csv(file_path, names=header_list)
 
 print(my_df.info())
 print(my_df)
 
+def remove_retweets(df: DataFrame):
+    rows_to_drop = df[df['Text'].str.startswith('RT @')]
+    return df.drop(df[df['Text'].str.startswith('RT @')].index, inplace = True)
 
-name = 'Haris'
-# Number of tweets to pull
-tweetCount = 5
+remove_retweets(my_df)
 
-# Calling the user_timeline function with our parameters
-results = api.user_timeline(screen_name=name, count=tweetCount)
+print(my_df)
+     
 
-# foreach through all tweets pulled
-for tweet in results:
-   # printing the text stored inside the tweet object
-   print (tweet.text)
+
 
 
 
