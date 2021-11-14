@@ -3,8 +3,11 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import tweepy as tw
 import datetime 
+from email.utils import parsedate_tz, mktime_tz
 import csv
-pd.set_option("display.precision", 2)
+
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 900)
 
 consumer_key = os.environ.get('C_KEY')
 consumer_secret = os.environ.get('C_SECRET')
@@ -26,7 +29,7 @@ except:
 search_words = "#Latvija"
 language = "lv"
 date_until = datetime.date.today()
-item_count = 50
+item_count = 100
 
 # Collect tweets
 tweets = tw.Cursor(api.search_tweets,
@@ -53,17 +56,32 @@ csvFile.close()
 header_list = ["Created at", "Text", "Hashtags", "Location","Username", "Followers", "Totaltweets"]
 my_df = pd.read_csv(file_path, names=header_list)
 
-print(my_df.info())
-print(my_df)
+#Change date format
+my_df['Created at'] = my_df['Created at'].map(lambda x: x.rstrip('+00:00'))
 
+print(my_df.info())
+print("Original dataframe: \n")
+print(my_df[['Created at', 'Text', 'Hashtags', 'Username']].head(10))
+
+
+# Remove retweets from df
 def remove_retweets(df: DataFrame):
     rows_to_drop = df[df['Text'].str.startswith('RT @')]
-    return df.drop(df[df['Text'].str.startswith('RT @')].index, inplace = True)
+    return df.drop(df[df['Text'].str.startswith('RT @')].index)
 
-remove_retweets(my_df)
+cleaned_df = remove_retweets(my_df)
+print("Cleaned dataframe without retweets: \n")
+print(cleaned_df[['Created at', 'Text', 'Hashtags', 'Username']].head(10))
 
-print(my_df)
-     
+# Get info about users
+def get_info(df, id):
+    return df.loc[id, :]
+
+#Find most popular user by number of followers
+most_popular_user = cleaned_df['Followers'].idxmax()
+print(f"\n Detailed info about the most popular tweeter(by number of followers): \n {get_info(cleaned_df, most_popular_user)}\n ")
+
+
 
 
 
