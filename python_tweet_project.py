@@ -5,9 +5,10 @@ import tweepy as tw
 import datetime 
 from email.utils import parsedate_tz, mktime_tz
 import csv
+import json
 
 pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 900)
+pd.set_option('display.width', 500)
 
 consumer_key = os.environ.get('C_KEY')
 consumer_secret = os.environ.get('C_SECRET')
@@ -44,12 +45,15 @@ csvFile = open(file_path, 'w')
 #Use csv writer
 csvWriter = csv.writer(csvFile)
 
-# Iterate, write a row to the CSV file, print tweets
-my_list_of_tweets = []
+# Iterate, write a row to the CSV file
 for tweet in tweets:
-    csvWriter.writerow([tweet.created_at, tweet.text, tweet.entities['hashtags'],tweet.user.location, tweet.user.name, 
+    hashtags = tweet.entities['hashtags']
+    hashtext = list()
+    for j in range(0, len(hashtags)):
+            hashtext.append(hashtags[j]['text'])
+    csvWriter.writerow([tweet.created_at, tweet.text, hashtext,
+                        tweet.user.location, tweet.user.name, 
                         tweet.user.followers_count, tweet.user.statuses_count])
-    my_list_of_tweets.append(tweet)
 csvFile.close()
 
 # Create a pandas dataframe
@@ -59,12 +63,13 @@ my_df = pd.read_csv(file_path, names=header_list)
 #Change date format
 my_df['Created at'] = my_df['Created at'].map(lambda x: x.rstrip('+00:00'))
 
+
 print(my_df.info())
 print("Original dataframe: \n")
 print(my_df[['Created at', 'Text', 'Hashtags', 'Username']].head(10))
 
 
-# Remove retweets from df
+# Remove retweets from dataframe
 def remove_retweets(df: DataFrame):
     rows_to_drop = df[df['Text'].str.startswith('RT @')]
     return df.drop(df[df['Text'].str.startswith('RT @')].index)
