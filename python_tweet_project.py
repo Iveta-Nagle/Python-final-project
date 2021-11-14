@@ -3,9 +3,8 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import tweepy as tw
 import datetime 
-from email.utils import parsedate_tz, mktime_tz
 import csv
-import json
+
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 500)
@@ -51,13 +50,13 @@ for tweet in tweets:
     hashtext = list()
     for j in range(0, len(hashtags)):
             hashtext.append(hashtags[j]['text'])
-    csvWriter.writerow([tweet.created_at, tweet.text, hashtext,
-                        tweet.user.location, tweet.user.name, 
+    csvWriter.writerow([tweet.created_at, tweet.text, hashtext,tweet.user.name, 
+                        tweet.user.location,  tweet.retweet_count,
                         tweet.user.followers_count, tweet.user.statuses_count])
 csvFile.close()
 
 # Create a pandas dataframe
-header_list = ["Created at", "Text", "Hashtags", "Location","Username", "Followers", "Totaltweets"]
+header_list = ["Created at", "Text", "Hashtags", "Username",  "Location", "Retweet count", "Followers", "Total tweets"]
 my_df = pd.read_csv(file_path, names=header_list)
 
 #Change date format
@@ -76,17 +75,20 @@ def remove_retweets(df: DataFrame):
 
 cleaned_df = remove_retweets(my_df)
 print("Cleaned dataframe without retweets: \n")
-print(cleaned_df[['Created at', 'Text', 'Hashtags', 'Username']].head(10))
+#Printing the same first four columns as in original dataframe
+print(cleaned_df.iloc[:,0:4])
 
 # Get info about users
-def get_info(df, id):
+def get_full_info(df, id):
     return df.loc[id, :]
 
 #Find most popular user by number of followers
 most_popular_user = cleaned_df['Followers'].idxmax()
-print(f"\n Detailed info about the most popular tweeter(by number of followers): \n {get_info(cleaned_df, most_popular_user)}\n ")
+print(f"\n Detailed info about the most popular tweeter(by number of followers): \n {get_full_info(cleaned_df, most_popular_user)}\n ")
 
-
+#Find most popular tweet by number of retweets
+most_popular_tweet = cleaned_df['Retweet count'].idxmax()
+print(f"\n Detailed info about the most popular tweet(by number of retweets): \n {get_full_info(cleaned_df, most_popular_tweet)}\n ")
 
 
 
