@@ -38,7 +38,7 @@ tweets = tw.Cursor(api.search_tweets,
               until = date_until).items(item_count)
                   
 # Open a file to append data to
-file_path = '/Users/ivetanagle/PythonFiles/Python_tweet_project/result.csv'
+file_path = '/Users/ivetanagle/PythonFiles/Python-final-project/resources/result.csv'
 csvFile = open(file_path, 'w')
 
 #Use csv writer
